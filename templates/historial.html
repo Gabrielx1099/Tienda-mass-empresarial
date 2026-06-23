@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Mis Pedidos{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 class="page-title">📋 Mis Pedidos</h1>
+
+  {% if pedidos %}
+  <div class="historial-list">
+    {% for pedido in pedidos %}
+    <div class="hist-card">
+      <div class="hist-header">
+        <div>
+          <span class="hist-num">{{ pedido.numero_pedido }}</span>
+          <span class="hist-date">{{ pedido.fecha.strftime('%d/%m/%Y %H:%M') }}</span>
+        </div>
+        <span class="estado-badge estado-{{ pedido.estado.lower().replace(' ','_') }}">{{ pedido.estado }}</span>
+      </div>
+      <div class="hist-body">
+        <div class="hist-products">
+          {% for d in pedido.detalles %}
+          <span class="hist-prod-item">{{ d.producto.nombre }} (x{{ d.cantidad }})</span>
+          {% endfor %}
+        </div>
+        <div class="hist-meta">
+          <span>{{ '🚚 Delivery' if pedido.tipo_entrega == 'delivery' else '🏪 Recojo' }}</span>
+          <span>💳 {{ pedido.metodo_pago }}</span>
+        </div>
+      </div>
+      <div class="hist-footer">
+        <span class="hist-total">Total: <strong>S/ {{ "%.2f"|format(pedido.total) }}</strong></span>
+        <a href="{{ url_for('boleta', pedido_id=pedido.id) }}" class="btn-detail">Ver Boleta</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <h3>Aún no tienes pedidos</h3>
+    <p>¡Realiza tu primera compra!</p>
+    <a href="{{ url_for('catalogo') }}" class="btn-primary">Ver Catálogo</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

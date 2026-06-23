@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Pedidos{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">⚙️ Admin Panel</div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+      <a href="{{ url_for('admin_productos') }}">📦 Productos</a>
+      <a href="{{ url_for('admin_categorias') }}">🏷️ Categorías</a>
+      <a href="{{ url_for('admin_locales') }}">🏪 Locales</a>
+      <a href="{{ url_for('admin_pedidos') }}" class="active">🛒 Pedidos</a>
+      <a href="{{ url_for('admin_usuarios') }}">👥 Usuarios</a>
+      <hr>
+      <a href="{{ url_for('index') }}">🏠 Ver Tienda</a>
+      <a href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>🛒 Gestión de Pedidos</h1>
+    </div>
+
+    <!-- Filtros -->
+    <div class="admin-filters">
+      <form method="get" class="filters-form">
+        <input type="text" name="q" value="{{ q }}" placeholder="🔍 Buscar por N° pedido...">
+        <select name="estado">
+          <option value="">Todos los estados</option>
+          {% for e in ['Pendiente','Preparando','En camino','Entregado','Cancelado'] %}
+          <option value="{{ e }}" {% if estado == e %}selected{% endif %}>{{ e }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn-filter">Filtrar</button>
+        <a href="{{ url_for('admin_pedidos') }}" class="btn-filter-clear">Limpiar</a>
+      </form>
+    </div>
+
+    <div class="admin-panel">
+      {% if pedidos %}
+      <table class="admin-table">
+        <thead>
+          <tr><th>N° Pedido</th><th>Cliente</th><th>Fecha</th><th>Entrega</th><th>Total</th><th>Estado</th><th>Acción</th></tr>
+        </thead>
+        <tbody>
+        {% for p in pedidos %}
+        <tr>
+          <td><a href="{{ url_for('boleta', pedido_id=p.id) }}" target="_blank">{{ p.numero_pedido }}</a></td>
+          <td>{{ p.cliente.nombre_completo() }}</td>
+          <td>{{ p.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>{{ '🚚' if p.tipo_entrega == 'delivery' else '🏪' }} {{ p.tipo_entrega.capitalize() }}</td>
+          <td>S/ {{ "%.2f"|format(p.total) }}</td>
+          <td><span class="estado-badge estado-{{ p.estado.lower().replace(' ','_') }}">{{ p.estado }}</span></td>
+          <td>
+            <form action="{{ url_for('admin_pedido_estado', id=p.id) }}" method="post" class="inline-form">
+              <select name="estado" onchange="this.form.submit()">
+                {% for e in ['Pendiente','Preparando','En camino','Entregado','Cancelado'] %}
+                <option value="{{ e }}" {% if p.estado == e %}selected{% endif %}>{{ e }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🛒</div>
+        <p>No se encontraron pedidos</p>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}

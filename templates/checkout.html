@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% block title %}Método de Pago{% endblock %}
+{% block content %}
+<div class="container checkout-page">
+  <div class="checkout-steps">
+    <div class="step done">1 Carrito</div>
+    <div class="step done">2 Entrega</div>
+    <div class="step active">3 Pago</div>
+    <div class="step">4 Confirmación</div>
+  </div>
+
+  <h1 class="page-title">💳 Método de Pago</h1>
+
+  <div class="academic-warning">
+    ⚠️ <strong>AVISO ACADÉMICO:</strong> Este es un pago 100% simulado para fines educativos. <strong>No ingreses datos reales.</strong> Ningún cobro real será realizado.
+  </div>
+
+  <div class="checkout-layout">
+    <div class="payment-section">
+      <form method="POST" id="paymentForm">
+
+        <!-- Selección de método -->
+        <div class="payment-methods">
+          <h3>Selecciona un método de pago</h3>
+          <div class="method-grid">
+            <label class="method-card" onclick="showMethod('tarjeta')">
+              <input type="radio" name="metodo_pago" value="Tarjeta de Crédito" required>
+              <span>💳</span><strong>Tarjeta de Crédito</strong>
+            </label>
+            <label class="method-card" onclick="showMethod('tarjeta')">
+              <input type="radio" name="metodo_pago" value="Tarjeta de Débito">
+              <span>🏧</span><strong>Tarjeta de Débito</strong>
+            </label>
+            <label class="method-card" onclick="showMethod('yape')">
+              <input type="radio" name="metodo_pago" value="Yape">
+              <span>📱</span><strong>Yape</strong>
+            </label>
+            <label class="method-card" onclick="showMethod('plin')">
+              <input type="radio" name="metodo_pago" value="Plin">
+              <span>💚</span><strong>Plin</strong>
+            </label>
+            <label class="method-card" onclick="showMethod('contra')">
+              <input type="radio" name="metodo_pago" value="Contra Entrega">
+              <span>💵</span><strong>Contra Entrega</strong>
+            </label>
+          </div>
+        </div>
+
+        <!-- Tarjeta -->
+        <div id="form-tarjeta" class="payment-form-section" style="display:none">
+          <h4>Datos de la Tarjeta (FICTICIOS)</h4>
+          <div class="card-preview" id="cardPreview">
+            <div class="card-chip">▪▪▪▪</div>
+            <div class="card-number-preview" id="cnPreview">•••• •••• •••• ••••</div>
+            <div class="card-bottom">
+              <span id="cnamePreview">NOMBRE TITULAR</span>
+              <span id="cexpPreview">MM/AA</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Nombre del titular</label>
+            <input type="text" id="cname" placeholder="JUAN PEREZ" maxlength="30"
+                   oninput="document.getElementById('cnamePreview').textContent = this.value.toUpperCase() || 'NOMBRE TITULAR'">
+          </div>
+          <div class="form-group">
+            <label>Número de tarjeta (16 dígitos ficticios)</label>
+            <input type="text" id="cnumber" placeholder="4532 1234 5678 9012" maxlength="19"
+                   oninput="formatCard(this)">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha de vencimiento</label>
+              <input type="text" id="cexp" placeholder="MM/AA" maxlength="5"
+                     oninput="formatExp(this)">
+            </div>
+            <div class="form-group">
+              <label>CVV (3 dígitos)</label>
+              <input type="text" id="ccvv" placeholder="123" maxlength="3" pattern="\d{3}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tipo de tarjeta</label>
+            <select id="ctype">
+              <option>Visa</option>
+              <option>Mastercard</option>
+              <option>American Express</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Yape -->
+        <div id="form-yape" class="payment-form-section" style="display:none">
+          <div class="wallet-info">
+            <div class="wallet-icon">📱</div>
+            <h4>Pago con Yape (simulado)</h4>
+            <p>Número Yape ficticio: <strong>999-000-100</strong></p>
+            <p>Al confirmar, se simulará el pago automáticamente.</p>
+            <div class="wallet-qr">QR SIMULADO</div>
+          </div>
+        </div>
+
+        <!-- Plin -->
+        <div id="form-plin" class="payment-form-section" style="display:none">
+          <div class="wallet-info">
+            <div class="wallet-icon">💚</div>
+            <h4>Pago con Plin (simulado)</h4>
+            <p>Número Plin ficticio: <strong>999-000-200</strong></p>
+            <p>Al confirmar, se simulará el pago automáticamente.</p>
+            <div class="wallet-qr plin">QR SIMULADO</div>
+          </div>
+        </div>
+
+        <!-- Contra entrega -->
+        <div id="form-contra" class="payment-form-section" style="display:none">
+          <div class="wallet-info">
+            <div class="wallet-icon">💵</div>
+            <h4>Pago Contra Entrega</h4>
+            <p>Pagarás en efectivo al recibir tu pedido.</p>
+            <p>Ten el monto exacto listo: <strong>S/ {{ "%.2f"|format(total) }}</strong></p>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-checkout-pay" onclick="return validatePayment()">
+          🔒 Confirmar Pago Simulado — S/ {{ "%.2f"|format(total) }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Resumen -->
+    <div class="order-summary-panel">
+      <h3>Resumen del Pedido</h3>
+      <div class="summary-type">
+        <span>{{ '🚚 Delivery' if tipo_entrega == 'delivery' else '🏪 Recojo en tienda' }}</span>
+      </div>
+      {% for d in detalles %}
+      {% set precio = d.producto.precio_oferta or d.producto.precio %}
+      <div class="sum-item">
+        <span>{{ d.producto.nombre }} x{{ d.cantidad }}</span>
+        <span>S/ {{ "%.2f"|format(precio * d.cantidad) }}</span>
+      </div>
+      {% endfor %}
+      <hr>
+      <div class="sum-item"><span>Subtotal</span><span>S/ {{ "%.2f"|format(subtotal) }}</span></div>
+      <div class="sum-item"><span>Delivery</span><span>{% if delivery == 0 %}Gratis{% else %}S/ {{ "%.2f"|format(delivery) }}{% endif %}</span></div>
+      <div class="sum-item total"><span><strong>Total</strong></span><span><strong>S/ {{ "%.2f"|format(total) }}</strong></span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function showMethod(type) {
+  ['tarjeta','yape','plin','contra'].forEach(t => {
+    document.getElementById('form-'+t).style.display = 'none';
+  });
+  document.getElementById('form-'+type).style.display = 'block';
+}
+
+function formatCard(input) {
+  let v = input.value.replace(/\D/g,'').substring(0,16);
+  input.value = v.replace(/(.{4})/g,'$1 ').trim();
+  const preview = document.getElementById('cnPreview');
+  const padded = v.padEnd(16,'•');
+  preview.textContent = padded.replace(/(.{4})/g,'$1 ').trim();
+}
+
+function formatExp(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length >= 2) v = v.substring(0,2)+'/'+v.substring(2,4);
+  input.value = v;
+  document.getElementById('cexpPreview').textContent = v || 'MM/AA';
+}
+
+function validatePayment() {
+  const method = document.querySelector('input[name="metodo_pago"]:checked');
+  if (!method) { alert('Selecciona un método de pago'); return false; }
+  const m = method.value;
+  if (m === 'Tarjeta de Crédito' || m === 'Tarjeta de Débito') {
+    const n = document.getElementById('cnumber').value.replace(/\s/g,'');
+    const cvv = document.getElementById('ccvv').value;
+    const exp = document.getElementById('cexp').value;
+    if (n.length < 16) { alert('El número de tarjeta debe tener 16 dígitos'); return false; }
+    if (cvv.length < 3) { alert('El CVV debe tener 3 dígitos'); return false; }
+    if (!exp.match(/^\d{2}\/\d{2}$/)) { alert('Fecha de vencimiento inválida (MM/AA)'); return false; }
+  }
+  return true;
+}
+
+document.querySelectorAll('.method-card').forEach(card => {
+  card.addEventListener('click', function() {
+    document.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+{% endblock %}

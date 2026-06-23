@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}{{ producto.nombre }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="breadcrumb">
+    <a href="{{ url_for('index') }}">Inicio</a> /
+    <a href="{{ url_for('catalogo') }}">Catálogo</a> /
+    <a href="{{ url_for('catalogo', categoria=producto.categoria_id) }}">{{ producto.categoria.nombre }}</a> /
+    <span>{{ producto.nombre }}</span>
+  </div>
+
+  <div class="product-detail">
+    <div class="detail-img">
+      <img src="{{ url_for('static', filename='uploads/' + producto.imagen) if producto.imagen != 'default_product.png' else url_for('static', filename='img/default_product.png') }}"
+           alt="{{ producto.nombre }}" onerror="this.src='{{ url_for('static', filename='img/default_product.png') }}'">
+      {% if producto.precio_oferta %}
+      <div class="detail-badge-oferta">OFERTA<br>
+        -{{ ((1 - producto.precio_oferta/producto.precio)*100)|int }}%
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="detail-info">
+      <p class="detail-cat">{{ producto.categoria.icono }} {{ producto.categoria.nombre }}</p>
+      <h1 class="detail-title">{{ producto.nombre }}</h1>
+
+      <div class="detail-prices">
+        {% if producto.precio_oferta %}
+          <span class="detail-price-oferta">S/ {{ "%.2f"|format(producto.precio_oferta) }}</span>
+          <span class="detail-price-original">S/ {{ "%.2f"|format(producto.precio) }}</span>
+          <span class="detail-ahorro">Ahorras S/ {{ "%.2f"|format(producto.precio - producto.precio_oferta) }}</span>
+        {% else %}
+          <span class="detail-price-normal">S/ {{ "%.2f"|format(producto.precio) }}</span>
+        {% endif %}
+      </div>
+
+      {% if producto.descripcion %}
+      <p class="detail-desc">{{ producto.descripcion }}</p>
+      {% endif %}
+
+      <div class="detail-stock {% if producto.stock == 0 %}out{% elif producto.stock <= 5 %}low{% else %}ok{% endif %}">
+        {% if producto.stock == 0 %}
+          ❌ Sin stock disponible
+        {% elif producto.stock <= 5 %}
+          ⚠️ ¡Solo {{ producto.stock }} unidad(es) disponibles!
+        {% else %}
+          ✅ Stock disponible: {{ producto.stock }} unidades
+        {% endif %}
+      </div>
+
+      {% if current_user.is_authenticated and producto.stock > 0 %}
+      <form action="{{ url_for('agregar_carrito', producto_id=producto.id) }}" method="post" class="detail-add-form">
+        <div class="qty-selector">
+          <label>Cantidad:</label>
+          <div class="qty-controls">
+            <button type="button" onclick="changeQty(-1)">−</button>
+            <input type="number" name="cantidad" id="qtyInput" value="1" min="1" max="{{ producto.stock }}" />
+            <button type="button" onclick="changeQty(1)">+</button>
+          </div>
+        </div>
+        <button type="submit" class="btn-add-detail">🛒 Agregar al Carrito</button>
+      </form>
+      {% elif not current_user.is_authenticated %}
+      <div class="detail-login-msg">
+        <p><a href="{{ url_for('login') }}">Inicia sesión</a> para agregar al carrito</p>
+      </div>
+      {% else %}
+      <button class="btn-add-detail disabled" disabled>Producto Agotado</button>
+      {% endif %}
+
+      <div class="detail-meta">
+        <div class="meta-item">🚚 Delivery desde S/ 5.00</div>
+        <div class="meta-item">🏪 Recojo en tienda gratis</div>
+        <div class="meta-item">💳 Múltiples métodos de pago</div>
+      </div>
+    </div>
+  </div>
+
+  {% if relacionados %}
+  <div class="section">
+    <div class="section-header">
+      <h2>Productos Relacionados</h2>
+    </div>
+    <div class="products-grid">
+      {% for p in relacionados %}
+      <div class="product-card">
+        <div class="product-img-wrap">
+          <img src="{{ url_for('static', filename='uploads/' + p.imagen) if p.imagen != 'default_product.png' else url_for('static', filename='img/default_product.png') }}"
+               alt="{{ p.nombre }}" loading="lazy" onerror="this.src='{{ url_for('static', filename='img/default_product.png') }}'">
+          {% if p.precio_oferta %}<span class="badge-oferta">OFERTA</span>{% endif %}
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">{{ p.nombre }}</h3>
+          <div class="product-prices">
+            {% if p.precio_oferta %}
+              <span class="price-oferta">S/ {{ "%.2f"|format(p.precio_oferta) }}</span>
+              <span class="price-original">S/ {{ "%.2f"|format(p.precio) }}</span>
+            {% else %}
+              <span class="price-normal">S/ {{ "%.2f"|format(p.precio) }}</span>
+            {% endif %}
+          </div>
+          <div class="product-actions">
+            <a href="{{ url_for('detalle_producto', id=p.id) }}" class="btn-detail">Ver</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function changeQty(delta) {
+  const input = document.getElementById('qtyInput');
+  const max = parseInt(input.max);
+  let val = parseInt(input.value) + delta;
+  val = Math.max(1, Math.min(max, val));
+  input.value = val;
+}
+</script>
+{% endblock %}

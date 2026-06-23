@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Categorías{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">⚙️ Admin Panel</div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+      <a href="{{ url_for('admin_productos') }}">📦 Productos</a>
+      <a href="{{ url_for('admin_categorias') }}" class="active">🏷️ Categorías</a>
+      <a href="{{ url_for('admin_locales') }}">🏪 Locales</a>
+      <a href="{{ url_for('admin_pedidos') }}">🛒 Pedidos</a>
+      <a href="{{ url_for('admin_usuarios') }}">👥 Usuarios</a>
+      <hr>
+      <a href="{{ url_for('index') }}">🏠 Ver Tienda</a>
+      <a href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>🏷️ Gestión de Categorías</h1>
+    </div>
+
+    <div class="admin-two-col">
+      <!-- Lista -->
+      <div class="admin-panel">
+        <h3>Categorías existentes</h3>
+        <table class="admin-table">
+          <thead><tr><th>Icono</th><th>Nombre</th><th>Descripción</th><th>Productos</th><th>Acciones</th></tr></thead>
+          <tbody>
+          {% for cat in categorias %}
+          <tr>
+            <td style="font-size:1.5rem">{{ cat.icono }}</td>
+            <td><strong>{{ cat.nombre }}</strong></td>
+            <td>{{ cat.descripcion or '—' }}</td>
+            <td>{{ cat.productos|length }}</td>
+            <td class="action-btns">
+              <button class="btn-sm btn-edit" onclick="fillEditForm({{ cat.id }}, '{{ cat.nombre }}', '{{ cat.descripcion or '' }}', '{{ cat.icono }}')">✏️ Editar</button>
+              {% if cat.productos|length == 0 %}
+              <form action="{{ url_for('admin_categoria_eliminar', id=cat.id) }}" method="post" style="display:inline"
+                    onsubmit="return confirm('¿Eliminar categoría?')">
+                <button type="submit" class="btn-sm btn-danger">🗑️</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Formulario crear/editar -->
+      <div class="admin-panel">
+        <h3 id="formTitle">➕ Nueva Categoría</h3>
+        <form method="POST" id="catForm" class="admin-form">
+          <input type="hidden" name="cat_id" id="catId">
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input type="text" name="nombre" id="catNombre" required placeholder="Ej: Bebidas">
+          </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <input type="text" name="descripcion" id="catDesc" placeholder="Descripción opcional">
+          </div>
+          <div class="form-group">
+            <label>Icono (emoji)</label>
+            <input type="text" name="icono" id="catIcono" value="🛒" maxlength="5">
+          </div>
+          <div class="form-actions">
+            <button type="button" onclick="resetForm()" class="btn-secondary">Limpiar</button>
+            <button type="submit" id="catSubmit" class="btn-primary">➕ Crear</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Edit Modal form hidden -->
+<form method="POST" id="editForm" style="display:none">
+  <input type="text" name="nombre" id="editNombre">
+  <input type="text" name="descripcion" id="editDesc">
+  <input type="text" name="icono" id="editIcono">
+</form>
+
+{% endblock %}
+{% block scripts %}
+<script>
+function fillEditForm(id, nombre, desc, icono) {
+  document.getElementById('formTitle').textContent = '✏️ Editar Categoría';
+  document.getElementById('catNombre').value = nombre;
+  document.getElementById('catDesc').value = desc;
+  document.getElementById('catIcono').value = icono;
+  document.getElementById('catSubmit').textContent = '💾 Guardar';
+  document.getElementById('catForm').action = `/admin/categoria/editar/${id}`;
+}
+function resetForm() {
+  document.getElementById('formTitle').textContent = '➕ Nueva Categoría';
+  document.getElementById('catNombre').value = '';
+  document.getElementById('catDesc').value = '';
+  document.getElementById('catIcono').value = '🛒';
+  document.getElementById('catSubmit').textContent = '➕ Crear';
+  document.getElementById('catForm').action = '';
+}
+</script>
+{% endblock %}

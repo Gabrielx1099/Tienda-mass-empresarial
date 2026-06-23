@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Panel Admin{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">⚙️ Admin Panel</div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}" class="{% if request.endpoint == 'admin_dashboard' %}active{% endif %}">📊 Dashboard</a>
+      <a href="{{ url_for('admin_productos') }}" class="{% if 'producto' in request.endpoint %}active{% endif %}">📦 Productos</a>
+      <a href="{{ url_for('admin_categorias') }}" class="{% if 'categor' in request.endpoint %}active{% endif %}">🏷️ Categorías</a>
+      <a href="{{ url_for('admin_locales') }}" class="{% if 'local' in request.endpoint %}active{% endif %}">🏪 Locales</a>
+      <a href="{{ url_for('admin_pedidos') }}" class="{% if 'pedido' in request.endpoint %}active{% endif %}">🛒 Pedidos</a>
+      <a href="{{ url_for('admin_usuarios') }}" class="{% if 'usuario' in request.endpoint %}active{% endif %}">👥 Usuarios</a>
+      <hr>
+      <a href="{{ url_for('index') }}">🏠 Ver Tienda</a>
+      <a href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>📊 Dashboard</h1>
+      <span>Bienvenido, {{ current_user.nombre }} 👋</span>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-yellow">
+        <div class="kpi-icon">📦</div>
+        <div class="kpi-data">
+          <span class="kpi-value">{{ total_productos }}</span>
+          <span class="kpi-label">Productos activos</span>
+        </div>
+      </div>
+      <div class="kpi-card kpi-red">
+        <div class="kpi-icon">🛒</div>
+        <div class="kpi-data">
+          <span class="kpi-value">{{ total_pedidos }}</span>
+          <span class="kpi-label">Pedidos totales</span>
+        </div>
+      </div>
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-data">
+          <span class="kpi-value">S/ {{ "%.2f"|format(ventas) }}</span>
+          <span class="kpi-label">Ventas simuladas</span>
+        </div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-data">
+          <span class="kpi-value">{{ total_clientes }}</span>
+          <span class="kpi-label">Clientes registrados</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accesos rápidos -->
+    <div class="quick-actions">
+      <a href="{{ url_for('admin_producto_nuevo') }}" class="qa-btn">➕ Nuevo Producto</a>
+      <a href="{{ url_for('admin_pedidos') }}" class="qa-btn">📋 Ver Pedidos</a>
+      <a href="{{ url_for('admin_usuarios') }}" class="qa-btn">👥 Ver Usuarios</a>
+      <a href="{{ url_for('admin_locales') }}" class="qa-btn">🏪 Gestionar Locales</a>
+    </div>
+
+    <div class="admin-panels">
+      <!-- Bajo stock -->
+      {% if bajo_stock %}
+      <div class="admin-panel">
+        <h3>⚠️ Productos con Bajo Stock</h3>
+        <table class="admin-table">
+          <thead><tr><th>Producto</th><th>Stock</th><th>Acción</th></tr></thead>
+          <tbody>
+          {% for p in bajo_stock %}
+          <tr class="{% if p.stock == 0 %}row-agotado{% else %}row-bajo{% endif %}">
+            <td>{{ p.nombre }}</td>
+            <td><span class="stock-badge {% if p.stock == 0 %}agotado{% else %}bajo{% endif %}">{{ p.stock }}</span></td>
+            <td><a href="{{ url_for('admin_producto_editar', id=p.id) }}" class="btn-sm">Editar</a></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- Últimos pedidos -->
+      <div class="admin-panel">
+        <h3>🛒 Últimos Pedidos</h3>
+        <table class="admin-table">
+          <thead><tr><th>N° Pedido</th><th>Cliente</th><th>Total</th><th>Estado</th></tr></thead>
+          <tbody>
+          {% for p in ultimos_pedidos %}
+          <tr>
+            <td><a href="{{ url_for('boleta', pedido_id=p.id) }}">{{ p.numero_pedido }}</a></td>
+            <td>{{ p.cliente.nombre_completo() }}</td>
+            <td>S/ {{ "%.2f"|format(p.total) }}</td>
+            <td><span class="estado-badge estado-{{ p.estado.lower().replace(' ','_') }}">{{ p.estado }}</span></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <a href="{{ url_for('admin_pedidos') }}" class="see-all-link">Ver todos los pedidos →</a>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

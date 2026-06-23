@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}Datos de Entrega{% endblock %}
+{% block content %}
+<div class="container checkout-page">
+  <div class="checkout-steps">
+    <div class="step done">1 Carrito</div>
+    <div class="step active">2 Entrega</div>
+    <div class="step">3 Pago</div>
+    <div class="step">4 Confirmación</div>
+  </div>
+
+  <h1 class="page-title">📦 Datos de Entrega</h1>
+
+  <form method="POST" class="checkout-form">
+    <!-- Tipo de entrega -->
+    <div class="delivery-type-selector">
+      <label class="delivery-option {% if not session.get('tipo_entrega') or session.get('tipo_entrega') == 'delivery' %}active{% endif %}" id="lbl-delivery">
+        <input type="radio" name="tipo_entrega" value="delivery" id="rd-delivery"
+               {% if not session.get('tipo_entrega') or session.get('tipo_entrega') == 'delivery' %}checked{% endif %}
+               onchange="toggleEntrega('delivery')">
+        <span class="do-icon">🚚</span>
+        <div>
+          <strong>Delivery a domicilio</strong>
+          <p>Desde S/ 5.00</p>
+        </div>
+      </label>
+      <label class="delivery-option {% if session.get('tipo_entrega') == 'recojo' %}active{% endif %}" id="lbl-recojo">
+        <input type="radio" name="tipo_entrega" value="recojo" id="rd-recojo"
+               {% if session.get('tipo_entrega') == 'recojo' %}checked{% endif %}
+               onchange="toggleEntrega('recojo')">
+        <span class="do-icon">🏪</span>
+        <div>
+          <strong>Recojo en tienda</strong>
+          <p>Gratis</p>
+        </div>
+      </label>
+    </div>
+
+    <!-- Sección Delivery -->
+    <div id="section-delivery" class="entrega-section">
+      <h3>📍 Dirección de Entrega</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Departamento *</label>
+          <select name="departamento">
+            <option value="Lima">Lima</option>
+            <option value="Callao">Callao</option>
+            <option value="Arequipa">Arequipa</option>
+            <option value="La Libertad">La Libertad</option>
+            <option value="Piura">Piura</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Provincia *</label>
+          <input type="text" name="provincia" placeholder="Ej: Lima" value="{{ session.get('prov_entrega','') }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Distrito *</label>
+        <input type="text" name="distrito" placeholder="Ej: Miraflores" value="{{ session.get('dist_entrega','') }}">
+      </div>
+      <div class="form-group">
+        <label>Dirección exacta *</label>
+        <input type="text" name="direccion" placeholder="Ej: Av. Principal 123, Piso 2" value="{{ session.get('direccion_entrega','') }}">
+      </div>
+      <div class="form-group">
+        <label>Referencia</label>
+        <input type="text" name="referencia" placeholder="Ej: Frente al parque, casa color azul" value="{{ session.get('referencia','') }}">
+      </div>
+      <div class="delivery-cost-info">
+        💡 Lima Metropolitana: S/ 5 · Callao: S/ 6 · Distritos alejados: S/ 8
+      </div>
+    </div>
+
+    <!-- Sección Recojo -->
+    <div id="section-recojo" class="entrega-section" style="display:none">
+      <h3>🏪 Seleccionar Local</h3>
+      <div class="locals-grid">
+        {% for local in locales %}
+        <label class="local-card">
+          <input type="radio" name="local_id" value="{{ local.id }}">
+          <div class="local-info">
+            <strong>{{ local.nombre_local }}</strong>
+            <p>📍 {{ local.direccion }}</p>
+            <p>🕐 {{ local.horario }}</p>
+            <p>📞 {{ local.telefono }}</p>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="form-group">
+        <label>DNI del receptor *</label>
+        <input type="text" name="dni_receptor" placeholder="12345678" maxlength="8">
+      </div>
+    </div>
+
+    <!-- Datos del receptor (común) -->
+    <div class="form-section">
+      <h3>👤 Datos del Receptor</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre del receptor *</label>
+          <input type="text" name="nombre_receptor" required placeholder="Nombre completo" value="{{ session.get('nombre_receptor', current_user.nombre_completo()) }}">
+        </div>
+        <div class="form-group">
+          <label>Teléfono de contacto *</label>
+          <input type="tel" name="telefono_receptor" required placeholder="999 000 111" value="{{ session.get('telefono_receptor', current_user.telefono or '') }}">
+        </div>
+      </div>
+    </div>
+
+    <div class="checkout-footer">
+      <a href="{{ url_for('carrito') }}" class="btn-back">← Volver al Carrito</a>
+      <button type="submit" class="btn-next">Continuar al Pago →</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function toggleEntrega(tipo) {
+  const sd = document.getElementById('section-delivery');
+  const sr = document.getElementById('section-recojo');
+  const ld = document.getElementById('lbl-delivery');
+  const lr = document.getElementById('lbl-recojo');
+  if (tipo === 'delivery') {
+    sd.style.display = 'block';
+    sr.style.display = 'none';
+    ld.classList.add('active');
+    lr.classList.remove('active');
+  } else {
+    sd.style.display = 'none';
+    sr.style.display = 'block';
+    lr.classList.add('active');
+    ld.classList.remove('active');
+  }
+}
+// Init
+document.addEventListener('DOMContentLoaded', function() {
+  const checked = document.querySelector('input[name="tipo_entrega"]:checked');
+  if (checked) toggleEntrega(checked.value);
+});
+</script>
+{% endblock %}

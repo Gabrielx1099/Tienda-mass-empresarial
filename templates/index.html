@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+
+<!-- Hero Banner -->
+<section class="hero">
+  <div class="hero-slider" id="heroSlider">
+    <div class="slide active" style="background: linear-gradient(135deg, #D62B2B 0%, #FF5C00 100%);">
+      <div class="slide-content">
+        <span class="slide-tag">🔥 OFERTAS DE HOY</span>
+        <h1>Ahorra más<br>con <strong>MASS</strong></h1>
+        <p>Los mejores precios del mercado, ahora en tu pantalla</p>
+        <a href="{{ url_for('catalogo') }}" class="btn-hero">Ver Ofertas</a>
+      </div>
+      <div class="slide-emoji">🛒</div>
+    </div>
+    <div class="slide" style="background: linear-gradient(135deg, #F5B800 0%, #FF8C00 100%);">
+      <div class="slide-content">
+        <span class="slide-tag">🚚 DELIVERY</span>
+        <h1>Delivery<br><strong>Express</strong></h1>
+        <p>Recibe tus productos en la puerta de tu casa</p>
+        <a href="{{ url_for('catalogo') }}" class="btn-hero">Pedir Ahora</a>
+      </div>
+      <div class="slide-emoji">📦</div>
+    </div>
+    <div class="slide" style="background: linear-gradient(135deg, #1a7c2f 0%, #32CD32 100%);">
+      <div class="slide-content">
+        <span class="slide-tag">🌾 ABARROTES</span>
+        <h1>Todo para<br>tu <strong>hogar</strong></h1>
+        <p>Abarrotes, bebidas, limpieza y mucho más</p>
+        <a href="{{ url_for('catalogo') }}" class="btn-hero">Ver Catálogo</a>
+      </div>
+      <div class="slide-emoji">🏠</div>
+    </div>
+  </div>
+  <div class="slider-dots">
+    <button class="dot active" onclick="goToSlide(0)"></button>
+    <button class="dot" onclick="goToSlide(1)"></button>
+    <button class="dot" onclick="goToSlide(2)"></button>
+  </div>
+  <button class="slide-btn prev" onclick="changeSlide(-1)">‹</button>
+  <button class="slide-btn next" onclick="changeSlide(1)">›</button>
+</section>
+
+<!-- Promo Cards -->
+<section class="promo-cards container">
+  <div class="promo-card red">
+    <div class="pc-icon">🚚</div>
+    <div>
+      <strong>Delivery Rápido</strong>
+      <p>Lima desde S/ 5</p>
+    </div>
+  </div>
+  <div class="promo-card yellow">
+    <div class="pc-icon">🔒</div>
+    <div>
+      <strong>Pago Seguro</strong>
+      <p>100% simulado</p>
+    </div>
+  </div>
+  <div class="promo-card red">
+    <div class="pc-icon">🏪</div>
+    <div>
+      <strong>8 Locales</strong>
+      <p>Recojo gratis</p>
+    </div>
+  </div>
+  <div class="promo-card yellow">
+    <div class="pc-icon">⭐</div>
+    <div>
+      <strong>Productos</strong>
+      <p>Seleccionados</p>
+    </div>
+  </div>
+</section>
+
+<!-- Categorías -->
+<section class="section container">
+  <div class="section-header">
+    <h2>Compra por Categoría</h2>
+    <a href="{{ url_for('catalogo') }}" class="see-all">Ver todo →</a>
+  </div>
+  <div class="categories-grid">
+    {% for cat in categorias %}
+    <a href="{{ url_for('catalogo', categoria=cat.id) }}" class="cat-card">
+      <span class="cat-card-icon">{{ cat.icono }}</span>
+      <span class="cat-card-name">{{ cat.nombre }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Ofertas -->
+{% if productos_oferta %}
+<section class="section oferta-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>🔥 Ofertas Especiales</h2>
+      <a href="{{ url_for('catalogo') }}" class="see-all">Ver todas →</a>
+    </div>
+    <div class="products-grid">
+      {% for p in productos_oferta %}
+      <div class="product-card">
+        <div class="product-img-wrap">
+          <img src="{{ url_for('static', filename='uploads/' + p.imagen) if p.imagen != 'default_product.png' else url_for('static', filename='img/default_product.png') }}"
+               alt="{{ p.nombre }}" loading="lazy" onerror="this.src='{{ url_for('static', filename='img/default_product.png') }}'">
+          <span class="badge-oferta">OFERTA</span>
+          {% if p.stock <= 5 %}<span class="badge-stock">¡Últimas!</span>{% endif %}
+        </div>
+        <div class="product-info">
+          <p class="product-cat">{{ p.categoria.nombre }}</p>
+          <h3 class="product-name">{{ p.nombre }}</h3>
+          <div class="product-prices">
+            <span class="price-oferta">S/ {{ "%.2f"|format(p.precio_oferta) }}</span>
+            <span class="price-original">S/ {{ "%.2f"|format(p.precio) }}</span>
+          </div>
+          <div class="product-actions">
+            <a href="{{ url_for('detalle_producto', id=p.id) }}" class="btn-detail">Ver</a>
+            {% if current_user.is_authenticated %}
+            <form action="{{ url_for('agregar_carrito', producto_id=p.id) }}" method="post" style="display:inline">
+              <input type="hidden" name="cantidad" value="1">
+              <button type="submit" class="btn-add-cart" {% if p.stock == 0 %}disabled{% endif %}>
+                {% if p.stock == 0 %}Agotado{% else %}+ Agregar{% endif %}
+              </button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="btn-add-cart">+ Agregar</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Productos Destacados -->
+{% if productos_destacados %}
+<section class="section container">
+  <div class="section-header">
+    <h2>⭐ Productos Destacados</h2>
+    <a href="{{ url_for('catalogo') }}" class="see-all">Ver todos →</a>
+  </div>
+  <div class="products-grid">
+    {% for p in productos_destacados %}
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="{{ url_for('static', filename='uploads/' + p.imagen) if p.imagen != 'default_product.png' else url_for('static', filename='img/default_product.png') }}"
+             alt="{{ p.nombre }}" loading="lazy" onerror="this.src='{{ url_for('static', filename='img/default_product.png') }}'">
+        {% if p.precio_oferta %}<span class="badge-oferta">OFERTA</span>{% endif %}
+        <span class="badge-dest">⭐</span>
+      </div>
+      <div class="product-info">
+        <p class="product-cat">{{ p.categoria.nombre }}</p>
+        <h3 class="product-name">{{ p.nombre }}</h3>
+        <div class="product-prices">
+          {% if p.precio_oferta %}
+            <span class="price-oferta">S/ {{ "%.2f"|format(p.precio_oferta) }}</span>
+            <span class="price-original">S/ {{ "%.2f"|format(p.precio) }}</span>
+          {% else %}
+            <span class="price-normal">S/ {{ "%.2f"|format(p.precio) }}</span>
+          {% endif %}
+        </div>
+        <div class="product-actions">
+          <a href="{{ url_for('detalle_producto', id=p.id) }}" class="btn-detail">Ver</a>
+          {% if current_user.is_authenticated %}
+          <form action="{{ url_for('agregar_carrito', producto_id=p.id) }}" method="post" style="display:inline">
+            <input type="hidden" name="cantidad" value="1">
+            <button type="submit" class="btn-add-cart" {% if p.stock == 0 %}disabled{% endif %}>
+              {% if p.stock == 0 %}Agotado{% else %}+ Agregar{% endif %}
+            </button>
+          </form>
+          {% else %}
+          <a href="{{ url_for('login') }}" class="btn-add-cart">+ Agregar</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- CTA Banner -->
+<section class="cta-banner">
+  <div class="cta-content">
+    <h2>¿Aún no tienes cuenta?</h2>
+    <p>Regístrate gratis y empieza a comprar hoy mismo</p>
+    <div class="cta-btns">
+      <a href="{{ url_for('register') }}" class="btn-cta-primary">Crear Cuenta Gratis</a>
+      <a href="{{ url_for('catalogo') }}" class="btn-cta-secondary">Ver Catálogo</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentSlide = 0;
+const slides = document.querySelectorAll('.slide');
+const dots = document.querySelectorAll('.dot');
+
+function showSlide(n) {
+  slides.forEach(s => s.classList.remove('active'));
+  dots.forEach(d => d.classList.remove('active'));
+  currentSlide = (n + slides.length) % slides.length;
+  slides[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+}
+
+function changeSlide(dir) { showSlide(currentSlide + dir); }
+function goToSlide(n) { showSlide(n); }
+
+setInterval(() => changeSlide(1), 5000);
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Productos{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">⚙️ Admin Panel</div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+      <a href="{{ url_for('admin_productos') }}" class="active">📦 Productos</a>
+      <a href="{{ url_for('admin_categorias') }}">🏷️ Categorías</a>
+      <a href="{{ url_for('admin_locales') }}">🏪 Locales</a>
+      <a href="{{ url_for('admin_pedidos') }}">🛒 Pedidos</a>
+      <a href="{{ url_for('admin_usuarios') }}">👥 Usuarios</a>
+      <hr>
+      <a href="{{ url_for('index') }}">🏠 Ver Tienda</a>
+      <a href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>📦 Gestión de Productos</h1>
+      <a href="{{ url_for('admin_producto_nuevo') }}" class="btn-admin-new">➕ Nuevo Producto</a>
+    </div>
+
+    <div class="admin-panel">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Imagen</th><th>Nombre</th><th>Categoría</th>
+            <th>Precio</th><th>Oferta</th><th>Stock</th><th>Estado</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for p in productos %}
+        <tr class="{% if not p.activo %}row-inactive{% endif %}">
+          <td>{{ p.id }}</td>
+          <td>
+            <img src="{{ url_for('static', filename='uploads/' + p.imagen) if p.imagen != 'default_product.png' else url_for('static', filename='img/default_product.png') }}"
+                 class="table-thumb" onerror="this.src='{{ url_for('static', filename='img/default_product.png') }}'">
+          </td>
+          <td>{{ p.nombre }}</td>
+          <td>{{ p.categoria.nombre if p.categoria else '—' }}</td>
+          <td>S/ {{ "%.2f"|format(p.precio) }}</td>
+          <td>{% if p.precio_oferta %}S/ {{ "%.2f"|format(p.precio_oferta) }}{% else %}—{% endif %}</td>
+          <td><span class="stock-badge {% if p.stock == 0 %}agotado{% elif p.stock <= 5 %}bajo{% else %}ok{% endif %}">{{ p.stock }}</span></td>
+          <td>
+            <span class="badge-status {% if p.activo %}badge-active{% else %}badge-inactive{% endif %}">
+              {{ 'Activo' if p.activo else 'Inactivo' }}
+            </span>
+          </td>
+          <td class="action-btns">
+            <a href="{{ url_for('admin_producto_editar', id=p.id) }}" class="btn-sm btn-edit">✏️ Editar</a>
+            <form action="{{ url_for('admin_producto_toggle', id=p.id) }}" method="post" style="display:inline">
+              <button type="submit" class="btn-sm {% if p.activo %}btn-warn{% else %}btn-success{% endif %}">
+                {{ '🔴 Desact.' if p.activo else '🟢 Act.' }}
+              </button>
+            </form>
+            <form action="{{ url_for('admin_producto_eliminar', id=p.id) }}" method="post" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar {{ p.nombre }}?')">
+              <button type="submit" class="btn-sm btn-danger">🗑️</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Locales{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">⚙️ Admin Panel</div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+      <a href="{{ url_for('admin_productos') }}">📦 Productos</a>
+      <a href="{{ url_for('admin_categorias') }}">🏷️ Categorías</a>
+      <a href="{{ url_for('admin_locales') }}" class="active">🏪 Locales</a>
+      <a href="{{ url_for('admin_pedidos') }}">🛒 Pedidos</a>
+      <a href="{{ url_for('admin_usuarios') }}">👥 Usuarios</a>
+      <hr>
+      <a href="{{ url_for('index') }}">🏠 Ver Tienda</a>
+      <a href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>🏪 Gestión de Locales</h1>
+      <a href="{{ url_for('admin_local_nuevo') }}" class="btn-admin-new">➕ Nuevo Local</a>
+    </div>
+
+    <div class="admin-panel">
+      <div class="locals-admin-grid">
+        {% for local in locales %}
+        <div class="local-admin-card {% if not local.activo %}inactive{% endif %}">
+          <div class="lac-header">
+            <h4>{{ local.nombre_local }}</h4>
+            <span class="badge-status {% if local.activo %}badge-active{% else %}badge-inactive{% endif %}">
+              {{ 'Activo' if local.activo else 'Inactivo' }}
+            </span>
+          </div>
+          <p>📍 {{ local.direccion }}</p>
+          <p>🏙️ {{ local.distrito }}, {{ local.provincia }}, {{ local.departamento }}</p>
+          <p>📞 {{ local.telefono }}</p>
+          <p>🕐 {{ local.horario }}</p>
+          <div class="lac-actions">
+            <a href="{{ url_for('admin_local_editar', id=local.id) }}" class="btn-sm btn-edit">✏️ Editar</a>
+            <form action="{{ url_for('admin_local_toggle', id=local.id) }}" method="post" style="display:inline">
+              <button type="submit" class="btn-sm {% if local.activo %}btn-warn{% else %}btn-success{% endif %}">
+                {{ '🔴 Desactivar' if local.activo else '🟢 Activar' }}
+              </button>
+            </form>
+            <form action="{{ url_for('admin_local_eliminar', id=local.id) }}" method="post" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar este local?')">
+              <button type="submit" class="btn-sm btn-danger">🗑️</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Editar' if local else 'Nuevo' }} Local{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">⚙️ Admin Panel</div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+      <a href="{{ url_for('admin_productos') }}">📦 Productos</a>
+      <a href="{{ url_for('admin_categorias') }}">🏷️ Categorías</a>
+      <a href="{{ url_for('admin_locales') }}" class="active">🏪 Locales</a>
+      <a href="{{ url_for('admin_pedidos') }}">🛒 Pedidos</a>
+      <a href="{{ url_for('admin_usuarios') }}">👥 Usuarios</a>
+      <hr>
+      <a href="{{ url_for('index') }}">🏠 Ver Tienda</a>
+      <a href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>{{ '✏️ Editar' if local else '➕ Nuevo' }} Local</h1>
+      <a href="{{ url_for('admin_locales') }}" class="btn-back">← Volver</a>
+    </div>
+    <div class="admin-form-card">
+      <form method="POST" class="admin-form">
+        <div class="form-group">
+          <label>Nombre del Local *</label>
+          <input type="text" name="nombre_local" required value="{{ local.nombre_local if local else '' }}" placeholder="Ej: Mass San Juan de Lurigancho">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Departamento *</label>
+            <input type="text" name="departamento" required value="{{ local.departamento if local else '' }}" placeholder="Lima">
+          </div>
+          <div class="form-group">
+            <label>Provincia *</label>
+            <input type="text" name="provincia" required value="{{ local.provincia if local else '' }}" placeholder="Lima">
+          </div>
+          <div class="form-group">
+            <label>Distrito *</label>
+            <input type="text" name="distrito" required value="{{ local.distrito if local else '' }}" placeholder="San Juan de Lurigancho">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Dirección *</label>
+          <input type="text" name="direccion" required value="{{ local.direccion if local else '' }}" placeholder="Av. Gran Chimú 1155">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" name="telefono" value="{{ local.telefono if local else '' }}" placeholder="(01) 700-0001">
+          </div>
+          <div class="form-group">
+            <label>Horario</label>
+            <input type="text" name="horario" value="{{ local.horario if local else '' }}" placeholder="Lun-Dom 7:00am - 11:00pm">
+          </div>
+        </div>
+        <div class="form-actions">
+          <a href="{{ url_for('admin_locales') }}" class="btn-secondary">Cancelar</a>
+          <button type="submit" class="btn-primary">
+            {{ '💾 Guardar Cambios' if local else '➕ Crear Local' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+{% endblock %}

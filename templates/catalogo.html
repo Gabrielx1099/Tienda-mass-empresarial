@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Catálogo{% endblock %}
+{% block content %}
+<div class="container catalog-page">
+  <div class="catalog-header">
+    <h1>Catálogo de Productos</h1>
+    <p>{{ productos|length }} producto(s) encontrado(s)</p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-bar">
+    <form method="get" class="filters-form">
+      <div class="filter-group">
+        <input type="text" name="q" value="{{ q }}" placeholder="🔍 Buscar producto..." />
+      </div>
+      <div class="filter-group">
+        <select name="categoria">
+          <option value="">Todas las categorías</option>
+          {% for cat in categorias %}
+          <option value="{{ cat.id }}" {% if cat_id == cat.id %}selected{% endif %}>
+            {{ cat.icono }} {{ cat.nombre }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <select name="orden">
+          <option value="nombre" {% if orden=='nombre' %}selected{% endif %}>Nombre A-Z</option>
+          <option value="precio_asc" {% if orden=='precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
+          <option value="precio_desc" {% if orden=='precio_desc' %}selected{% endif %}>Precio: Mayor a Menor</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="{{ url_for('catalogo') }}" class="btn-filter-clear">Limpiar</a>
+    </form>
+  </div>
+
+  {% if productos %}
+  <div class="products-grid products-grid-wide">
+    {% for p in productos %}
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="{{ url_for('static', filename='uploads/' + p.imagen) if p.imagen != 'default_product.png' else url_for('static', filename='img/default_product.png') }}"
+             alt="{{ p.nombre }}" loading="lazy" onerror="this.src='{{ url_for('static', filename='img/default_product.png') }}'">
+        {% if p.precio_oferta %}<span class="badge-oferta">OFERTA</span>{% endif %}
+        {% if p.stock <= 5 and p.stock > 0 %}<span class="badge-stock">Últimas!</span>{% endif %}
+        {% if p.stock == 0 %}<span class="badge-agotado">Agotado</span>{% endif %}
+      </div>
+      <div class="product-info">
+        <p class="product-cat">{{ p.categoria.nombre }}</p>
+        <h3 class="product-name">{{ p.nombre }}</h3>
+        <p class="product-stock">Stock: {{ p.stock }} unid.</p>
+        <div class="product-prices">
+          {% if p.precio_oferta %}
+            <span class="price-oferta">S/ {{ "%.2f"|format(p.precio_oferta) }}</span>
+            <span class="price-original">S/ {{ "%.2f"|format(p.precio) }}</span>
+          {% else %}
+            <span class="price-normal">S/ {{ "%.2f"|format(p.precio) }}</span>
+          {% endif %}
+        </div>
+        <div class="product-actions">
+          <a href="{{ url_for('detalle_producto', id=p.id) }}" class="btn-detail">Ver Detalle</a>
+          {% if current_user.is_authenticated %}
+          <form action="{{ url_for('agregar_carrito', producto_id=p.id) }}" method="post" style="display:inline">
+            <input type="hidden" name="cantidad" value="1">
+            <button type="submit" class="btn-add-cart" {% if p.stock == 0 %}disabled{% endif %}>
+              {% if p.stock == 0 %}Agotado{% else %}+ Carrito{% endif %}
+            </button>
+          </form>
+          {% else %}
+          <a href="{{ url_for('login') }}" class="btn-add-cart">+ Carrito</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h3>No se encontraron productos</h3>
+    <p>Intenta con otros filtros</p>
+    <a href="{{ url_for('catalogo') }}" class="btn-primary">Ver Todo</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

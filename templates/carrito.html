@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Mi Carrito{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 class="page-title">🛒 Mi Carrito</h1>
+
+  {% if detalles %}
+  <div class="cart-layout">
+    <div class="cart-items">
+      <div class="cart-header-row">
+        <span>Producto</span><span>Precio</span><span>Cantidad</span><span>Subtotal</span><span></span>
+      </div>
+
+      {% for d in detalles %}
+      {% set precio = d.producto.precio_oferta or d.producto.precio %}
+      <div class="cart-item">
+        <div class="ci-product">
+          <img src="{{ url_for('static', filename='uploads/' + d.producto.imagen) if d.producto.imagen != 'default_product.png' else url_for('static', filename='img/default_product.png') }}"
+               alt="{{ d.producto.nombre }}" onerror="this.src='{{ url_for('static', filename='img/default_product.png') }}'">
+          <div>
+            <strong>{{ d.producto.nombre }}</strong>
+            <p>{{ d.producto.categoria.nombre }}</p>
+          </div>
+        </div>
+        <div class="ci-price">S/ {{ "%.2f"|format(precio) }}</div>
+        <div class="ci-qty">
+          <form action="{{ url_for('actualizar_carrito', detalle_id=d.id) }}" method="post" class="qty-form">
+            <button type="submit" name="cantidad" value="{{ d.cantidad - 1 }}">−</button>
+            <span>{{ d.cantidad }}</span>
+            <button type="submit" name="cantidad" value="{{ d.cantidad + 1 }}"
+                    {% if d.cantidad >= d.producto.stock %}disabled{% endif %}>+</button>
+          </form>
+        </div>
+        <div class="ci-subtotal">S/ {{ "%.2f"|format(precio * d.cantidad) }}</div>
+        <div class="ci-del">
+          <form action="{{ url_for('eliminar_carrito', detalle_id=d.id) }}" method="post">
+            <button type="submit" class="btn-del">✕</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="cart-actions">
+        <form action="{{ url_for('vaciar_carrito') }}" method="post">
+          <button type="submit" class="btn-clear-cart" onclick="return confirm('¿Vaciar el carrito?')">🗑️ Vaciar Carrito</button>
+        </form>
+        <a href="{{ url_for('catalogo') }}" class="btn-continue">← Seguir Comprando</a>
+      </div>
+    </div>
+
+    <div class="cart-summary">
+      <h3>Resumen del Pedido</h3>
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span>S/ {{ "%.2f"|format(subtotal) }}</span>
+      </div>
+      <div class="summary-row">
+        <span>Delivery</span>
+        <span class="delivery-est">Se calcula en el siguiente paso</span>
+      </div>
+      <div class="summary-row total">
+        <span>Total estimado</span>
+        <span>S/ {{ "%.2f"|format(subtotal) }}+</span>
+      </div>
+      <a href="{{ url_for('datos_entrega') }}" class="btn-checkout">
+        Continuar con la Compra →
+      </a>
+      <div class="payment-icons">
+        <span title="Tarjeta">💳</span>
+        <span title="Yape">📱</span>
+        <span title="Plin">💚</span>
+        <span title="Contra entrega">💵</span>
+      </div>
+      <p class="secure-note">🔒 Pago 100% simulado — Proyecto académico</p>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🛒</div>
+    <h3>Tu carrito está vacío</h3>
+    <p>¡Agrega productos para comenzar!</p>
+    <a href="{{ url_for('catalogo') }}" class="btn-primary">Ver Catálogo</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

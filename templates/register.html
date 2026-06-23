@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Crear Cuenta{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">🛒 <span>MASS</span></div>
+    <h2>Crear Cuenta</h2>
+    <p class="auth-sub">Regístrate gratis</p>
+
+    <form method="POST" class="auth-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input type="text" name="nombre" required placeholder="Juan" />
+        </div>
+        <div class="form-group">
+          <label>Apellido *</label>
+          <input type="text" name="apellido" required placeholder="Pérez" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Correo electrónico *</label>
+        <input type="email" name="email" required placeholder="tucorreo@ejemplo.com" />
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="tel" name="telefono" placeholder="999 000 111" />
+      </div>
+      <div class="form-group">
+        <label>Contraseña *</label>
+        <div class="input-pass">
+          <input type="password" name="password" id="p1" required placeholder="Mínimo 6 caracteres" />
+          <button type="button" onclick="togglePass('p1', this)">👁️</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Confirmar Contraseña *</label>
+        <div class="input-pass">
+          <input type="password" name="confirm_password" id="p2" required placeholder="Repite la contraseña" />
+          <button type="button" onclick="togglePass('p2', this)">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-auth">Crear Cuenta</button>
+    </form>
+
+    <div class="auth-links">
+      <span>¿Ya tienes cuenta?</span>
+      <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function togglePass(id, btn) {
+  const i = document.getElementById(id);
+  i.type = i.type === 'password' ? 'text' : 'password';
+  btn.textContent = i.type === 'password' ? '👁️' : '🙈';
+}
+</script>
+{% endblock %}

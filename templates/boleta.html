@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Boleta #{{ pedido.numero_pedido }}{% endblock %}
+{% block content %}
+<div class="container boleta-page">
+
+  <div class="boleta-success">
+    <div class="success-icon">✅</div>
+    <h2>¡Pago Simulado Realizado Correctamente!</h2>
+    <p>Tu pedido ha sido registrado. Este es un proceso académico simulado.</p>
+  </div>
+
+  <div class="boleta-card" id="boletaPrint">
+    <div class="boleta-header">
+      <div class="boleta-logo">🛒 MASS</div>
+      <div class="boleta-title">
+        <h3>BOLETA ELECTRÓNICA SIMULADA</h3>
+        <p>Documento académico — No tiene validez fiscal</p>
+      </div>
+    </div>
+
+    <div class="boleta-meta">
+      <div class="meta-grid">
+        <div><label>N° Pedido</label><strong>{{ pedido.numero_pedido }}</strong></div>
+        <div><label>Fecha</label><strong>{{ pedido.fecha.strftime('%d/%m/%Y %H:%M') }}</strong></div>
+        <div><label>Cliente</label><strong>{{ pedido.cliente.nombre_completo() }}</strong></div>
+        <div><label>Estado</label>
+          <strong class="estado-badge estado-{{ pedido.estado.lower().replace(' ','_') }}">
+            {{ pedido.estado }}
+          </strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="boleta-entrega">
+      <h4>📦 Datos de Entrega</h4>
+      {% if pedido.tipo_entrega == 'delivery' %}
+      <p><strong>Tipo:</strong> 🚚 Delivery a domicilio</p>
+      <p><strong>Dirección:</strong> {{ pedido.direccion_entrega }}, {{ pedido.dist_entrega }}, {{ pedido.dep_entrega }}</p>
+      {% if pedido.referencia %}<p><strong>Referencia:</strong> {{ pedido.referencia }}</p>{% endif %}
+      {% else %}
+      <p><strong>Tipo:</strong> 🏪 Recojo en tienda</p>
+      {% if pedido.local %}<p><strong>Local:</strong> {{ pedido.local.nombre_local }} — {{ pedido.local.direccion }}</p>{% endif %}
+      {% endif %}
+      <p><strong>Receptor:</strong> {{ pedido.nombre_receptor }} | Tel: {{ pedido.telefono_receptor }}</p>
+      <p><strong>Método de pago:</strong> {{ pedido.metodo_pago }}</p>
+    </div>
+
+    <div class="boleta-items">
+      <h4>🛒 Productos</h4>
+      <table class="boleta-table">
+        <thead>
+          <tr><th>Producto</th><th>Cant.</th><th>P. Unit.</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody>
+          {% for d in pedido.detalles %}
+          <tr>
+            <td>{{ d.producto.nombre }}</td>
+            <td>{{ d.cantidad }}</td>
+            <td>S/ {{ "%.2f"|format(d.precio_unitario) }}</td>
+            <td>S/ {{ "%.2f"|format(d.precio_unitario * d.cantidad) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="boleta-totals">
+      <div class="total-row"><span>Subtotal</span><span>S/ {{ "%.2f"|format(pedido.subtotal) }}</span></div>
+      <div class="total-row">
+        <span>Delivery</span>
+        <span>{% if pedido.delivery == 0 %}Gratis{% else %}S/ {{ "%.2f"|format(pedido.delivery) }}{% endif %}</span>
+      </div>
+      <div class="total-row grand-total">
+        <span><strong>TOTAL</strong></span>
+        <span><strong>S/ {{ "%.2f"|format(pedido.total) }}</strong></span>
+      </div>
+    </div>
+
+    <div class="boleta-footer">
+      <p>⚠️ DOCUMENTO ACADÉMICO SIMULADO — No tiene validez fiscal real</p>
+      <p>Proyecto académico inspirado en Tiendas Mass de Perú</p>
+    </div>
+  </div>
+
+  <div class="boleta-actions">
+    <button onclick="window.print()" class="btn-print">🖨️ Imprimir Boleta</button>
+    <a href="{{ url_for('historial') }}" class="btn-secondary">📋 Ver Mis Pedidos</a>
+    <a href="{{ url_for('catalogo') }}" class="btn-primary">🛍️ Seguir Comprando</a>
+  </div>
+</div>
+{% endblock %}
