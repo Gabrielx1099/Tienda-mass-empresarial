@@ -1,11 +1,4 @@
-# 🛒 Tiendas Mass — Proyecto Académico (Flask)
-
-> ⚠️ **Proyecto académico inspirado en Tiendas Mass. No es una plataforma oficial.**
-> Todas las compras, pagos y métodos de entrega son **100% simulados**. No existe ninguna integración bancaria real ni se procesan transacciones reales.
-
-Sistema web de comercio electrónico desarrollado en **Python Flask** con panel administrativo completo, carrito de compras, checkout multi-paso, boleta simulada y gestión de productos/locales/pedidos/usuarios.
-
----
+# 🛒 Tiendas Mass — Proyecto Académico
 
 ## 📋 Tecnologías utilizadas
 
