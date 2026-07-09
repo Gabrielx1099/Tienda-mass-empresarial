@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'tiendas-mass-secretkey-2024-academia'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/tienda_mass'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:25Defebrero%3F@localhost/tienda_mass'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
