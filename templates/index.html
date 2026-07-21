@@ -6,6 +6,8 @@
 <!-- Hero Banner -->
 <section class="hero">
   <div class="hero-slider" id="heroSlider">
+
+    <!-- Slide 1 -->
     <div class="slide active" style="background: linear-gradient(135deg, #D62B2B 0%, #FF5C00 100%);">
       <div class="slide-content">
         <span class="slide-tag">🔥 OFERTAS DE HOY</span>
@@ -13,8 +15,13 @@
         <p>Los mejores precios del mercado, ahora en tu pantalla</p>
         <a href="{{ url_for('catalogo') }}" class="btn-hero">Ver Ofertas</a>
       </div>
-      <div class="slide-emoji">🛒</div>
+
+      <div class="slide-emoji">
+        <img src="{{ url_for('static', filename='img/carrito.png') }}" alt="Carrito">
+      </div>
     </div>
+
+    <!-- Slide 2 -->
     <div class="slide" style="background: linear-gradient(135deg, #F5B800 0%, #FF8C00 100%);">
       <div class="slide-content">
         <span class="slide-tag">🚚 DELIVERY</span>
@@ -22,8 +29,13 @@
         <p>Recibe tus productos en la puerta de tu casa</p>
         <a href="{{ url_for('catalogo') }}" class="btn-hero">Pedir Ahora</a>
       </div>
-      <div class="slide-emoji">📦</div>
+
+      <div class="slide-emoji">
+        <img src="{{ url_for('static', filename='img/delivery.png') }}" alt="Delivery">
+      </div>
     </div>
+
+    <!-- Slide 3 -->
     <div class="slide" style="background: linear-gradient(135deg, #1a7c2f 0%, #32CD32 100%);">
       <div class="slide-content">
         <span class="slide-tag">🌾 ABARROTES</span>
@@ -31,14 +43,14 @@
         <p>Abarrotes, bebidas, limpieza y mucho más</p>
         <a href="{{ url_for('catalogo') }}" class="btn-hero">Ver Catálogo</a>
       </div>
-      <div class="slide-emoji">🏠</div>
+
+      <div class="slide-emoji">
+        <img src="{{ url_for('static', filename='img/hogar.png') }}" alt="Hogar">
+      </div>
     </div>
+
   </div>
-  <div class="slider-dots">
-    <button class="dot active" onclick="goToSlide(0)"></button>
-    <button class="dot" onclick="goToSlide(1)"></button>
-    <button class="dot" onclick="goToSlide(2)"></button>
-  </div>
+  
   <button class="slide-btn prev" onclick="changeSlide(-1)">‹</button>
   <button class="slide-btn next" onclick="changeSlide(1)">›</button>
 </section>

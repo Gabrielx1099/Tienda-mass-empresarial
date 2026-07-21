@@ -547,6 +547,429 @@ def admin_dashboard():
                            bajo_stock=bajo_stock,
                            ultimos_pedidos=ultimos_pedidos)
 
+@app.route('/admin/analitica')
+@login_required
+@admin_required
+def admin_analitica():
+    from sqlalchemy import func
+    from datetime import datetime, timedelta
+
+    # ==========================================================
+    # FILTROS DE FECHA
+    # ==========================================================
+
+    fecha_inicio_texto = request.args.get('fecha_inicio', '')
+    fecha_fin_texto = request.args.get('fecha_fin', '')
+
+    fecha_inicio = None
+    fecha_fin = None
+
+    try:
+        if fecha_inicio_texto:
+            fecha_inicio = datetime.strptime(
+                fecha_inicio_texto,
+                '%Y-%m-%d'
+            )
+
+        if fecha_fin_texto:
+            fecha_fin = datetime.strptime(
+                fecha_fin_texto,
+                '%Y-%m-%d'
+            ) + timedelta(days=1)
+
+    except ValueError:
+        flash('El rango de fechas ingresado no es válido.', 'error')
+        fecha_inicio = None
+        fecha_fin = None
+
+    # Filtro reutilizable para las consultas de pedidos.
+    filtros_fecha = []
+
+    if fecha_inicio:
+        filtros_fecha.append(Pedido.fecha >= fecha_inicio)
+
+    if fecha_fin:
+        filtros_fecha.append(Pedido.fecha < fecha_fin)
+
+    # ==========================================================
+    # KPI: VENTAS TOTALES
+    # ==========================================================
+
+    consulta_ventas = db.session.query(
+        func.coalesce(func.sum(Pedido.total), 0)
+    )
+
+    if filtros_fecha:
+        consulta_ventas = consulta_ventas.filter(*filtros_fecha)
+
+    ventas_totales = float(consulta_ventas.scalar() or 0)
+
+    # ==========================================================
+    # KPI: PEDIDOS TOTALES
+    # ==========================================================
+
+    consulta_pedidos = db.session.query(
+        func.count(Pedido.id)
+    )
+
+    if filtros_fecha:
+        consulta_pedidos = consulta_pedidos.filter(*filtros_fecha)
+
+    pedidos_totales = int(consulta_pedidos.scalar() or 0)
+
+    # ==========================================================
+    # KPI: CLIENTES QUE REALIZARON PEDIDOS
+    # ==========================================================
+
+    consulta_clientes = db.session.query(
+        func.count(func.distinct(Pedido.usuario_id))
+    )
+
+    if filtros_fecha:
+        consulta_clientes = consulta_clientes.filter(*filtros_fecha)
+
+    clientes_activos = int(consulta_clientes.scalar() or 0)
+
+    # ==========================================================
+    # KPI: PRODUCTOS VENDIDOS
+    # ==========================================================
+
+    consulta_productos_vendidos = (
+        db.session.query(
+            func.coalesce(func.sum(PedidoDetalle.cantidad), 0)
+        )
+        .join(
+            Pedido,
+            Pedido.id == PedidoDetalle.pedido_id
+        )
+    )
+
+    if filtros_fecha:
+        consulta_productos_vendidos = (
+            consulta_productos_vendidos.filter(*filtros_fecha)
+        )
+
+    productos_vendidos = int(
+        consulta_productos_vendidos.scalar() or 0
+    )
+
+    # ==========================================================
+    # KPI: TICKET PROMEDIO
+    # ==========================================================
+
+    ticket_promedio = (
+        ventas_totales / pedidos_totales
+        if pedidos_totales > 0
+        else 0
+    )
+
+    # ==========================================================
+    # GRÁFICO 1: PRODUCTOS MÁS VENDIDOS
+    # ==========================================================
+
+    consulta_top_productos = (
+        db.session.query(
+            Producto.nombre.label('producto'),
+            func.sum(PedidoDetalle.cantidad).label('cantidad')
+        )
+        .join(
+            PedidoDetalle,
+            PedidoDetalle.producto_id == Producto.id
+        )
+        .join(
+            Pedido,
+            Pedido.id == PedidoDetalle.pedido_id
+        )
+    )
+
+    if filtros_fecha:
+        consulta_top_productos = (
+            consulta_top_productos.filter(*filtros_fecha)
+        )
+
+    top_productos = (
+        consulta_top_productos
+        .group_by(Producto.id, Producto.nombre)
+        .order_by(func.sum(PedidoDetalle.cantidad).desc())
+        .limit(8)
+        .all()
+    )
+
+    productos_labels = [
+        fila.producto for fila in top_productos
+    ]
+
+    productos_values = [
+        int(fila.cantidad or 0) for fila in top_productos
+    ]
+
+    # ==========================================================
+    # GRÁFICO 2: VENTAS POR CATEGORÍA
+    # ==========================================================
+
+    consulta_categorias = (
+        db.session.query(
+            Categoria.nombre.label('categoria'),
+            func.sum(
+                PedidoDetalle.cantidad * Producto.precio
+            ).label('ventas')
+        )
+        .join(
+            Producto,
+            Producto.categoria_id == Categoria.id
+        )
+        .join(
+            PedidoDetalle,
+            PedidoDetalle.producto_id == Producto.id
+        )
+        .join(
+            Pedido,
+            Pedido.id == PedidoDetalle.pedido_id
+        )
+    )
+
+    if filtros_fecha:
+        consulta_categorias = (
+            consulta_categorias.filter(*filtros_fecha)
+        )
+
+    ventas_categorias = (
+        consulta_categorias
+        .group_by(Categoria.id, Categoria.nombre)
+        .order_by(
+            func.sum(
+                PedidoDetalle.cantidad * Producto.precio
+            ).desc()
+        )
+        .all()
+    )
+
+    categorias_labels = [
+        fila.categoria for fila in ventas_categorias
+    ]
+
+    categorias_values = [
+        float(fila.ventas or 0) for fila in ventas_categorias
+    ]
+
+    # ==========================================================
+    # GRÁFICO 3: VENTAS POR MES
+    # MySQL: DATE_FORMAT(fecha, '%Y-%m')
+    # ==========================================================
+
+    mes_sql = func.date_format(Pedido.fecha, '%Y-%m')
+
+    consulta_ventas_mes = db.session.query(
+        mes_sql.label('mes'),
+        func.sum(Pedido.total).label('ventas')
+    )
+
+    if filtros_fecha:
+        consulta_ventas_mes = (
+            consulta_ventas_mes.filter(*filtros_fecha)
+        )
+
+    ventas_por_mes = (
+        consulta_ventas_mes
+        .group_by(mes_sql)
+        .order_by(mes_sql.asc())
+        .all()
+    )
+
+    meses_labels = [
+        fila.mes for fila in ventas_por_mes
+    ]
+
+    meses_values = [
+        float(fila.ventas or 0) for fila in ventas_por_mes
+    ]
+
+    # ==========================================================
+    # GRÁFICO 4: PEDIDOS POR ESTADO
+    # ==========================================================
+
+    consulta_estados = db.session.query(
+        Pedido.estado.label('estado'),
+        func.count(Pedido.id).label('cantidad')
+    )
+
+    if filtros_fecha:
+        consulta_estados = consulta_estados.filter(*filtros_fecha)
+
+    pedidos_por_estado = (
+        consulta_estados
+        .group_by(Pedido.estado)
+        .order_by(func.count(Pedido.id).desc())
+        .all()
+    )
+
+    estados_labels = [
+        (fila.estado or 'Sin estado').replace('_', ' ').title()
+        for fila in pedidos_por_estado
+    ]
+
+    estados_values = [
+        int(fila.cantidad or 0) for fila in pedidos_por_estado
+    ]
+
+    # ==========================================================
+    # GRÁFICO 5: VENTAS POR LOCAL
+    # ==========================================================
+
+    consulta_locales = (
+    db.session.query(
+        Local.nombre_local.label('local'),
+        func.sum(Pedido.total).label('ventas')
+    )
+    .join(
+        Pedido,
+        Pedido.local_id == Local.id
+    )
+)
+
+    if filtros_fecha:
+        consulta_locales = consulta_locales.filter(*filtros_fecha)
+
+    ventas_locales = (
+        consulta_locales
+        .group_by(Local.id, Local.nombre_local)
+        .order_by(func.sum(Pedido.total).desc())
+        .limit(8)
+        .all()
+    )
+
+    locales_labels = [
+        fila.local for fila in ventas_locales
+    ]
+
+    locales_values = [
+        float(fila.ventas or 0) for fila in ventas_locales
+    ]
+
+    # ==========================================================
+    # GRÁFICO 6: PEDIDOS POR DÍA DE LA SEMANA
+    # DAYNAME funciona en MySQL.
+    # ==========================================================
+
+    dia_sql = func.dayname(Pedido.fecha)
+
+    consulta_dias = db.session.query(
+        dia_sql.label('dia'),
+        func.count(Pedido.id).label('cantidad')
+    )
+
+    if filtros_fecha:
+        consulta_dias = consulta_dias.filter(*filtros_fecha)
+
+    pedidos_dias_raw = (
+        consulta_dias
+        .group_by(dia_sql)
+        .all()
+    )
+
+    traduccion_dias = {
+        'Monday': 'Lunes',
+        'Tuesday': 'Martes',
+        'Wednesday': 'Miércoles',
+        'Thursday': 'Jueves',
+        'Friday': 'Viernes',
+        'Saturday': 'Sábado',
+        'Sunday': 'Domingo'
+    }
+
+    pedidos_dias_dict = {
+        traduccion_dias.get(fila.dia, fila.dia): int(fila.cantidad or 0)
+        for fila in pedidos_dias_raw
+    }
+
+    orden_dias = [
+        'Lunes',
+        'Martes',
+        'Miércoles',
+        'Jueves',
+        'Viernes',
+        'Sábado',
+        'Domingo'
+    ]
+
+    dias_labels = orden_dias
+
+    dias_values = [
+        pedidos_dias_dict.get(dia, 0)
+        for dia in orden_dias
+    ]
+
+    # ==========================================================
+    # TABLA: PRODUCTOS MÁS VENDIDOS CON INGRESOS
+    # ==========================================================
+
+    consulta_tabla_productos = (
+        db.session.query(
+            Producto.nombre.label('producto'),
+            func.sum(PedidoDetalle.cantidad).label('cantidad'),
+            func.sum(
+                PedidoDetalle.cantidad * Producto.precio
+            ).label('ingresos')
+        )
+        .join(
+            PedidoDetalle,
+            PedidoDetalle.producto_id == Producto.id
+        )
+        .join(
+            Pedido,
+            Pedido.id == PedidoDetalle.pedido_id
+        )
+    )
+
+    if filtros_fecha:
+        consulta_tabla_productos = (
+            consulta_tabla_productos.filter(*filtros_fecha)
+        )
+
+    tabla_productos = (
+        consulta_tabla_productos
+        .group_by(Producto.id, Producto.nombre)
+        .order_by(func.sum(PedidoDetalle.cantidad).desc())
+        .limit(10)
+        .all()
+    )
+
+    # ==========================================================
+    # RENDERIZAR
+    # ==========================================================
+
+    return render_template(
+        'admin/analitica.html',
+
+        fecha_inicio=fecha_inicio_texto,
+        fecha_fin=fecha_fin_texto,
+
+        ventas_totales=ventas_totales,
+        pedidos_totales=pedidos_totales,
+        clientes_activos=clientes_activos,
+        productos_vendidos=productos_vendidos,
+        ticket_promedio=ticket_promedio,
+
+        productos_labels=productos_labels,
+        productos_values=productos_values,
+
+        categorias_labels=categorias_labels,
+        categorias_values=categorias_values,
+
+        meses_labels=meses_labels,
+        meses_values=meses_values,
+
+        estados_labels=estados_labels,
+        estados_values=estados_values,
+
+        locales_labels=locales_labels,
+        locales_values=locales_values,
+
+        dias_labels=dias_labels,
+        dias_values=dias_values,
+
+        tabla_productos=tabla_productos
+    )
 
 # PRODUCTOS ADMIN
 @app.route('/admin/productos')

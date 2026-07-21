@@ -12,6 +12,10 @@
       <a href="{{ url_for('admin_locales') }}" class="{% if 'local' in request.endpoint %}active{% endif %}">🏪 Locales</a>
       <a href="{{ url_for('admin_pedidos') }}" class="{% if 'pedido' in request.endpoint %}active{% endif %}">🛒 Pedidos</a>
       <a href="{{ url_for('admin_usuarios') }}" class="{% if 'usuario' in request.endpoint %}active{% endif %}">👥 Usuarios</a>
+      <a href="{{ url_for('admin_analitica') }}"
+           class="{% if request.endpoint == 'admin_analitica' %}active{% endif %}">
+            📈 Analítica
+        </a>
       <hr>
       <a href="{{ url_for('index') }}">🏠 Ver Tienda</a>
       <a href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a>
